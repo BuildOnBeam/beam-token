@@ -25,7 +25,7 @@ task("deploy-token")
         const signers = await ethers.getSigners();
 
         console.log("Deploying gov token");
-        const token = await new BeamToken__factory(signers[0]).deploy("Beam Circle", "MC", parseEther("1000000000"));
+        const token = await new BeamToken__factory(signers[0]).deploy("Beam", "BM", parseEther("0"));
         console.log(`Gov token deployed at: ${token.address}`);
         if(taskArgs.verify) {
             console.log("Verifying gov token, can take some time")
