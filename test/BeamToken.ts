@@ -8,9 +8,9 @@ import { parseEther } from "@ethersproject/units";
 
 const NAME = "NAME";
 const SYMBOL = "SYMBOL";
-const INITIAL_SUPPLY = parseEther("10000");
+const INITIAL_SUPPLY = parseEther("0");
 
-describe("BeamToken", function() {
+describe.only("BeamToken", function() {
 
     this.timeout(200000);
 
@@ -73,14 +73,17 @@ describe("BeamToken", function() {
     });
     describe("burn", async() => {
         it("Should work when calling from address which has BURNER_ROLE", async() => {
+            const MINT_AMOUNT = parseEther("10000");
+            await beamToken.connect(minter).mint(accounts[0].address, MINT_AMOUNT);
+
             const BURN_AMOUNT = parseEther("1");
-            await beamToken.connect(burner).burn(deployer.address, BURN_AMOUNT);
+            await beamToken.connect(burner).burn(accounts[0].address, BURN_AMOUNT);
 
             const totalSupply = await beamToken.totalSupply();
-            const accountBalance = await beamToken.balanceOf(deployer.address);
+            const accountBalance = await beamToken.balanceOf(accounts[0].address);
 
-            expect(totalSupply).to.eq(INITIAL_SUPPLY.sub(BURN_AMOUNT));
-            expect(accountBalance).to.eq(INITIAL_SUPPLY.sub(BURN_AMOUNT));
+            expect(totalSupply).to.eq(INITIAL_SUPPLY.add(MINT_AMOUNT).sub(BURN_AMOUNT));
+            expect(accountBalance).to.eq(INITIAL_SUPPLY.add(MINT_AMOUNT).sub(BURN_AMOUNT));
         });
         it("Should revert when called from address without BURNER_ROLE", async() => {
             await expect(beamToken.burn(accounts[0].address, parseEther("1"))).to.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
@@ -92,13 +95,16 @@ describe("BeamToken", function() {
             await expect(beamToken.transfer(beamToken.address, parseEther("1"))).to.be.revertedWith("BeamToken._transfer: transfer to self not allowed");
         });
         it("transfer should work normally", async() => {
+            const MINT_AMOUNT = parseEther("10000");
+            await beamToken.connect(minter).mint(deployer.address, MINT_AMOUNT);
+            
             const TRANSFER_AMOUNT = parseEther("1");
             await beamToken.transfer(accounts[0].address, TRANSFER_AMOUNT);
 
             const fromBalance = await beamToken.balanceOf(deployer.address);
             const toBalance = await beamToken.balanceOf(accounts[0].address);
 
-            expect(fromBalance).to.eq(INITIAL_SUPPLY.sub(TRANSFER_AMOUNT));
+            expect(fromBalance).to.eq(INITIAL_SUPPLY.add(MINT_AMOUNT).sub(TRANSFER_AMOUNT));
             expect(toBalance).to.eq(TRANSFER_AMOUNT);
         });
     });
