@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.6;
 
-import "./interfaces/IMeritToken.sol";
+import "./interfaces/IBeamToken.sol";
 
 contract TokenBurner {
 
-    IMeritToken public immutable token;
+    IBeamToken public immutable token;
 
     event Burn(address indexed burner, uint256 amount);
 
     constructor(address _token) {
-        token = IMeritToken(_token);
+        token = IBeamToken(_token);
     }
 
     function burn() external {

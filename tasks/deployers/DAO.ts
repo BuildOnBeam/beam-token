@@ -2,9 +2,9 @@
 import { task } from "hardhat/config";
 import { TaskArguments } from "hardhat/types";
 import { 
-    MeritDAO__factory,
+    BeamDAO__factory,
     TimelockController__factory,
-    MeritToken__factory,
+    BeamToken__factory,
 } from "../../typechain";
 import { constants } from "ethers/lib/ethers";
 import { parseEther } from "ethers/lib/utils";
@@ -25,7 +25,7 @@ task("deploy-token")
         const signers = await ethers.getSigners();
 
         console.log("Deploying gov token");
-        const token = await new MeritToken__factory(signers[0]).deploy("Merit Circle", "MC", parseEther("1000000000"));
+        const token = await new BeamToken__factory(signers[0]).deploy("Beam Circle", "MC", parseEther("1000000000"));
         console.log(`Gov token deployed at: ${token.address}`);
         if(taskArgs.verify) {
             console.log("Verifying gov token, can take some time")
@@ -42,7 +42,7 @@ task("deploy-token")
         }
 });
 
-task("deploy-merit-dao")
+task("deploy-beam-dao")
     .addParam("tokenName", "name of the erc20 gov token")
     .addParam("tokenSymbol", "symbol of the erc20 gov token")
     .addParam("initialSupply", "initialSupply of the erc20 gov token")
@@ -56,7 +56,7 @@ task("deploy-merit-dao")
         const signers = await ethers.getSigners();
 
         console.log("Deploying gov token");
-        const token = await new MeritToken__factory(signers[0]).deploy(taskArgs.tokenName, taskArgs.tokenSymbol, parseEther(taskArgs.initialSupply));
+        const token = await new BeamToken__factory(signers[0]).deploy(taskArgs.tokenName, taskArgs.tokenSymbol, parseEther(taskArgs.initialSupply));
         console.log(`Gov token deployed at: ${token.address}`);
         if(taskArgs.verify) {
             console.log("Verifying gov token, can take some time")
@@ -91,7 +91,7 @@ task("deploy-merit-dao")
         }
 
         console.log("Deploying DAO");
-        const DAO = await new MeritDAO__factory(signers[0]).deploy(
+        const DAO = await new BeamDAO__factory(signers[0]).deploy(
             token.address,
             timelock.address,
             taskArgs.daoName,
@@ -131,10 +131,10 @@ task("set-dao-permissions")
     .setAction(async(taskArgs, { ethers }) => {
         const signers = await ethers.getSigners();
 
-        const DAO = MeritDAO__factory.connect(taskArgs.daoAddress, signers[0]);
+        const DAO = BeamDAO__factory.connect(taskArgs.daoAddress, signers[0]);
         const timelockAddress = await DAO.timelock();
         const timelock = await TimelockController__factory.connect(timelockAddress, signers[0]);
-        const token = await MeritToken__factory.connect(await DAO.token(), signers[0]);
+        const token = await BeamToken__factory.connect(await DAO.token(), signers[0]);
 
         const TIME_LOCK_ADMIN_ROLE = await timelock.TIMELOCK_ADMIN_ROLE();
         const PROPOSER_ROLE = await timelock.PROPOSER_ROLE();

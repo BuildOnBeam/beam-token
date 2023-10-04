@@ -1,6 +1,6 @@
-# Merit Circle DAO
+# Beam DAO
 
-Merit Circle DAO smart contracts.
+Beam DAO smart contracts.
 
 ## Usage
 

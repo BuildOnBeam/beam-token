@@ -1,8 +1,8 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { 
-    MeritToken,
-    MeritToken__factory,
+    BeamToken,
+    BeamToken__factory,
     TokenBurner,
     TokenBurner__factory
 } from "../typechain";
@@ -20,7 +20,7 @@ describe("TokenBurner", function() {
 
     this.timeout(200000);
 
-    let meritToken: MeritToken;
+    let beamToken: BeamToken;
     let tokenBurner: TokenBurner;
     let deployer: SignerWithAddress;
     let accounts: SignerWithAddress[];
@@ -28,15 +28,15 @@ describe("TokenBurner", function() {
 
     before(async() => {
         [deployer, ...accounts] = await hre.ethers.getSigners();
-        meritToken = await (new MeritToken__factory(deployer)).deploy(NAME, SYMBOL, INITIAL_SUPPLY);
+        beamToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL, INITIAL_SUPPLY);
 
-        const MINTER_ROLE = await meritToken.MINTER_ROLE();
-        const BURNER_ROLE = await meritToken.BURNER_ROLE();
+        const MINTER_ROLE = await beamToken.MINTER_ROLE();
+        const BURNER_ROLE = await beamToken.BURNER_ROLE();
 
-        tokenBurner = await (new TokenBurner__factory(deployer)).deploy(meritToken.address);
+        tokenBurner = await (new TokenBurner__factory(deployer)).deploy(beamToken.address);
 
         // allow tokenBurner to burn tokens
-        await meritToken.grantRole(BURNER_ROLE, tokenBurner.address);
+        await beamToken.grantRole(BURNER_ROLE, tokenBurner.address);
 
         await timeTraveler.snapshot();
     });
@@ -47,12 +47,12 @@ describe("TokenBurner", function() {
 
     it("Burn should work", async() => {
         // Transfer some tokens into the burner
-        meritToken.transfer(tokenBurner.address, BURN_AMOUNT);
+        beamToken.transfer(tokenBurner.address, BURN_AMOUNT);
 
-        const totalSupplyBefore = await meritToken.totalSupply();
+        const totalSupplyBefore = await beamToken.totalSupply();
         await tokenBurner.burn();
-        const totalSupplyAfter = await meritToken.totalSupply();
-        const burnerBalance = await meritToken.balanceOf(tokenBurner.address);
+        const totalSupplyAfter = await beamToken.totalSupply();
+        const burnerBalance = await beamToken.balanceOf(tokenBurner.address);
 
         expect(totalSupplyAfter).to.eq(totalSupplyBefore.sub(BURN_AMOUNT));
         expect(burnerBalance).to.eq(0);
