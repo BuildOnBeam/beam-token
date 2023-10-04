@@ -10,7 +10,7 @@ const NAME = "NAME";
 const SYMBOL = "SYMBOL";
 const INITIAL_SUPPLY = parseEther("0");
 
-describe.only("BeamToken", function() {
+describe("BeamToken", function() {
 
     this.timeout(200000);
 
