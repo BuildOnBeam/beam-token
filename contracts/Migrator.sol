@@ -12,6 +12,9 @@ contract Migrator {
     event Migrated(address indexed migrant, uint256 indexed destinationAmount);
 
     constructor(address _source, address _destination, uint256 _migrationRate) {
+        require(address(_source) != address(0), "Source cannot be zero address");
+        require(address(_destination) != address(0), "Destination cannot be zero address");
+        require(_migrationRate > 0, "Migration rate cannot be zero");
         source = IBeamToken(_source);
         destination = IBeamToken(_destination);
         migrationRate = _migrationRate;

@@ -23,7 +23,7 @@ describe("BeamToken", function() {
 
     before(async() => {
         [deployer, minter, burner, ...accounts] = await hre.ethers.getSigners();
-        beamToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL, INITIAL_SUPPLY);
+        beamToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL);
 
         const MINTER_ROLE = await beamToken.MINTER_ROLE();
         const BURNER_ROLE = await beamToken.BURNER_ROLE();
@@ -54,6 +54,10 @@ describe("BeamToken", function() {
             const DEFAULT_ADMIN_ROLE = await beamToken.DEFAULT_ADMIN_ROLE();
             const hasRole = await beamToken.hasRole(DEFAULT_ADMIN_ROLE, deployer.address);
             expect(hasRole).to.eq(true);
+        });
+        it("Should revert when minting with empty name or symbol", async() => {
+            await expect((new BeamToken__factory(deployer)).deploy("", SYMBOL)).to.be.revertedWith("Empty name");
+            await expect((new BeamToken__factory(deployer)).deploy(NAME, "")).to.be.revertedWith("Empty symbol");
         });
     });
     describe("mint", async() => {

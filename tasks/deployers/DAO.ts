@@ -25,7 +25,7 @@ task("deploy-token")
         const signers = await ethers.getSigners();
 
         console.log("Deploying gov token");
-        const token = await new BeamToken__factory(signers[0]).deploy("Beam", "BM", parseEther("0"));
+        const token = await new BeamToken__factory(signers[0]).deploy("Beam", "BEAM");
         console.log(`Gov token deployed at: ${token.address}`);
         if(taskArgs.verify) {
             console.log("Verifying gov token, can take some time")
@@ -35,8 +35,7 @@ task("deploy-token")
                 address: token.address,
                 constructorArguments: [
                     taskArgs.tokenName,
-                    taskArgs.tokenSymbol,
-                    parseEther(taskArgs.initialSupply)
+                    taskArgs.tokenSymbol
                 ]
             })
         }
@@ -56,7 +55,7 @@ task("deploy-beam-dao")
         const signers = await ethers.getSigners();
 
         console.log("Deploying gov token");
-        const token = await new BeamToken__factory(signers[0]).deploy(taskArgs.tokenName, taskArgs.tokenSymbol, parseEther(taskArgs.initialSupply));
+        const token = await new BeamToken__factory(signers[0]).deploy(taskArgs.tokenName, taskArgs.tokenSymbol);
         console.log(`Gov token deployed at: ${token.address}`);
         if(taskArgs.verify) {
             console.log("Verifying gov token, can take some time")
@@ -66,8 +65,7 @@ task("deploy-beam-dao")
                 address: token.address,
                 constructorArguments: [
                     taskArgs.tokenName,
-                    taskArgs.tokenSymbol,
-                    parseEther(taskArgs.initialSupply)
+                    taskArgs.tokenSymbol
                 ]
             })
         }
