@@ -16,12 +16,14 @@ contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
         _;
     }
 
-    constructor(string memory _name, string memory _symbol, uint256 _initialSupply) ERC20Permit(_name) ERC20(_name, _symbol) {
-        _mint(_msgSender(), _initialSupply);
+    constructor(string memory _name, string memory _symbol) ERC20Permit(_name) ERC20(_name, _symbol) {
+        require(bytes(_name).length > 0, "Empty name");
+        require(bytes(_symbol).length > 0, "Empty symbol");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());  
     }
 
     function mint(address _to, uint256 _amount) onlyHasRole(MINTER_ROLE) override external {
+        require(_to != address(this), "BeamToken.mint: unable to mint tokens to itself");
         _mint(_to, _amount);
     }
 

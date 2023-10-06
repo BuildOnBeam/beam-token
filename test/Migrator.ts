@@ -4,12 +4,13 @@ import { BeamToken, BeamToken__factory, Migrator, Migrator__factory } from "../t
 import hre from "hardhat";
 import TimeTraveler from "../utils/TimeTraveler";
 import { parseEther } from "@ethersproject/units";
+import { AddressZero } from "@ethersproject/constants";
 
 
 const NAME = "NAME";
 const SYMBOL = "SYMBOL";
 const INITIAL_SUPPLY = parseEther("10000");
-const MIGRATION_RATE = 100;
+const MIGRATION_RATE = parseEther("100");
 const MIGRATION_AMOUNT = parseEther("600");
 
 describe("Migrator", function() {
@@ -26,14 +27,15 @@ describe("Migrator", function() {
 
     before(async() => {
         [deployer, migrant, ...accounts] = await hre.ethers.getSigners();
-        beamToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL, 0);
-        meritToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL, INITIAL_SUPPLY);
+        beamToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL);
+        meritToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL);
         migrator = await (new Migrator__factory(deployer)).deploy(meritToken.address, beamToken.address, MIGRATION_RATE);
 
         const MINTER_ROLE = await beamToken.MINTER_ROLE();
         const BURNER_ROLE = await beamToken.BURNER_ROLE();
 
         await meritToken.grantRole(MINTER_ROLE, deployer.address);
+        await meritToken.mint(deployer.address, INITIAL_SUPPLY);
 
         await meritToken.grantRole(BURNER_ROLE, migrator.address);
         await beamToken.grantRole(MINTER_ROLE, migrator.address);
@@ -54,6 +56,11 @@ describe("Migrator", function() {
             expect(source).to.eq(meritToken.address);
             expect(destination).to.eq(beamToken.address);
             expect(migrationRate).to.eq(MIGRATION_RATE);
+        });
+        it("Should revert if setting source, destination or migration rate to zero", async() => {
+            await expect((new Migrator__factory(deployer)).deploy(AddressZero, beamToken.address, MIGRATION_RATE)).to.revertedWith("Source cannot be zero address");
+            await expect((new Migrator__factory(deployer)).deploy(meritToken.address, AddressZero, MIGRATION_RATE)).to.revertedWith("Destination cannot be zero address");
+            await expect((new Migrator__factory(deployer)).deploy(meritToken.address, beamToken.address, 0)).to.revertedWith("Migration rate cannot be zero");
         });
     });
     describe("migrate", async() => {
@@ -76,9 +83,9 @@ describe("Migrator", function() {
             const beamTotalSupplyFinal = await beamToken.totalSupply();
 
             expect(meritTotalSupply).to.eq(meritTotalSupplyFinal.add(MIGRATION_AMOUNT));
-            expect(beamTotalSupply).to.eq(beamTotalSupplyFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE)));
+            expect(beamTotalSupply).to.eq(beamTotalSupplyFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1"))));
             expect(meritBalance).to.eq(meritBalanceFinal.add(MIGRATION_AMOUNT));
-            expect(beamBalance).to.eq(beamBalanceFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE)));
+            expect(beamBalance).to.eq(beamBalanceFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1"))));
         });
         it("Migrating should emit the correct event", async() => {
             const MINT_AMOUNT = parseEther("1500");
@@ -88,7 +95,7 @@ describe("Migrator", function() {
 
             await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT))
                 .to.emit(migrator, "Migrated")
-                .withArgs(migrant.address, MIGRATION_AMOUNT.mul(MIGRATION_RATE));
+                .withArgs(migrant.address, MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1")));
         });
         it("Should revert when called by a token owner without the amount", async() => {
             const MINT_AMOUNT = parseEther("1500");

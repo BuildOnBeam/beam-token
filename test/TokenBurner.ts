@@ -28,16 +28,18 @@ describe("TokenBurner", function() {
 
     before(async() => {
         [deployer, ...accounts] = await hre.ethers.getSigners();
-        beamToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL, INITIAL_SUPPLY);
+        beamToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL);
 
         const MINTER_ROLE = await beamToken.MINTER_ROLE();
         const BURNER_ROLE = await beamToken.BURNER_ROLE();
 
         tokenBurner = await (new TokenBurner__factory(deployer)).deploy(beamToken.address);
-
+        
         // allow tokenBurner to burn tokens
         await beamToken.grantRole(BURNER_ROLE, tokenBurner.address);
+        await beamToken.grantRole(MINTER_ROLE, deployer.address);
 
+        await beamToken.connect(deployer).mint(deployer.address, INITIAL_SUPPLY);
         await timeTraveler.snapshot();
     });
 
@@ -47,7 +49,7 @@ describe("TokenBurner", function() {
 
     it("Burn should work", async() => {
         // Transfer some tokens into the burner
-        beamToken.transfer(tokenBurner.address, BURN_AMOUNT);
+        await beamToken.transfer(tokenBurner.address, BURN_AMOUNT);
 
         const totalSupplyBefore = await beamToken.totalSupply();
         await tokenBurner.burn();

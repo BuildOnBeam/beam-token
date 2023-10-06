@@ -10,6 +10,7 @@ contract TokenBurner {
     event Burn(address indexed burner, uint256 amount);
 
     constructor(address _token) {
+        require(_token != address(0), "Token cannot be zero address");
         token = IBeamToken(_token);
     }
 
