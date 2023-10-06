@@ -70,6 +70,9 @@ describe("BeamToken", function() {
         it("Should revert when called from address without MINTER_ROLE", async() => {
             await expect(beamToken.mint(accounts[0].address, parseEther("1"))).to.be.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
         });
+        it("Should revert when minting tokens to itself", async() => {
+            await expect(beamToken.connect(minter).mint(beamToken.address, parseEther("1"))).to.be.revertedWith("BeamToken.mint: unable to mint tokens to itself");
+        });
     });
     describe("burn", async() => {
         it("Should work when calling from address which has BURNER_ROLE", async() => {

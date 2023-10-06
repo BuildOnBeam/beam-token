@@ -22,6 +22,7 @@ contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
     }
 
     function mint(address _to, uint256 _amount) onlyHasRole(MINTER_ROLE) override external {
+        require(_to != address(this), "BeamToken.mint: unable to mint tokens to itself");
         _mint(_to, _amount);
     }
 
