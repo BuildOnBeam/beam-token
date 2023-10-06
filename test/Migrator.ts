@@ -10,7 +10,7 @@ import { AddressZero } from "@ethersproject/constants";
 const NAME = "NAME";
 const SYMBOL = "SYMBOL";
 const INITIAL_SUPPLY = parseEther("10000");
-const MIGRATION_RATE = 100;
+const MIGRATION_RATE = parseEther("100");
 const MIGRATION_AMOUNT = parseEther("600");
 
 describe("Migrator", function() {
@@ -83,9 +83,9 @@ describe("Migrator", function() {
             const beamTotalSupplyFinal = await beamToken.totalSupply();
 
             expect(meritTotalSupply).to.eq(meritTotalSupplyFinal.add(MIGRATION_AMOUNT));
-            expect(beamTotalSupply).to.eq(beamTotalSupplyFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE)));
+            expect(beamTotalSupply).to.eq(beamTotalSupplyFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1"))));
             expect(meritBalance).to.eq(meritBalanceFinal.add(MIGRATION_AMOUNT));
-            expect(beamBalance).to.eq(beamBalanceFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE)));
+            expect(beamBalance).to.eq(beamBalanceFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1"))));
         });
         it("Migrating should emit the correct event", async() => {
             const MINT_AMOUNT = parseEther("1500");
@@ -95,7 +95,7 @@ describe("Migrator", function() {
 
             await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT))
                 .to.emit(migrator, "Migrated")
-                .withArgs(migrant.address, MIGRATION_AMOUNT.mul(MIGRATION_RATE));
+                .withArgs(migrant.address, MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1")));
         });
         it("Should revert when called by a token owner without the amount", async() => {
             const MINT_AMOUNT = parseEther("1500");

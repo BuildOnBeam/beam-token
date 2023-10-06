@@ -8,6 +8,7 @@ contract Migrator {
     IBeamToken public immutable source;
     IBeamToken public immutable destination;
     uint256 public immutable migrationRate;
+    uint256 public constant DECIMAL_PRECISION = 1e18;
 
     event Migrated(address indexed migrant, uint256 indexed destinationAmount);
 
@@ -21,7 +22,7 @@ contract Migrator {
     }
 
     function migrate(uint256 _sourceAmount) external {
-        uint256 destinationAmount = _sourceAmount * migrationRate;
+        uint256 destinationAmount = _sourceAmount * migrationRate / DECIMAL_PRECISION;
         source.burn(msg.sender, _sourceAmount);
         destination.mint(msg.sender, destinationAmount);
         emit Migrated(msg.sender, destinationAmount);
