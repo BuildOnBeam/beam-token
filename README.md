@@ -7,6 +7,7 @@ Beam DAO smart contracts.
 ### Available tasks
 
 Run the following command to see available tasks:
+
 ```sh
 npx hardhat help
 ```

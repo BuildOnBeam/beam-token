@@ -17,38 +17,41 @@ contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
     error NoTransferToSelf();
 
     modifier onlyHasRole(bytes32 _role) {
-        if(!hasRole(_role, msg.sender)) { 
+        if (!hasRole(_role, msg.sender)) {
             revert NoRole();
         }
         _;
     }
 
     constructor(string memory _name, string memory _symbol) ERC20Permit(_name) ERC20(_name, _symbol) {
-        if(bytes(_name).length == 0) { 
+        if (bytes(_name).length == 0) {
             revert EmptyName();
         }
-        if(bytes(_symbol).length == 0) { 
+        if (bytes(_symbol).length == 0) {
             revert EmptySymbol();
         }
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);  
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function mint(address _to, uint256 _amount) onlyHasRole(MINTER_ROLE) override external {
-        if(_to ==address(this)) {
+    function mint(address _to, uint256 _amount) external override onlyHasRole(MINTER_ROLE) {
+        if (_to == address(this)) {
             revert NoSelfMinting();
         }
         _mint(_to, _amount);
     }
 
-    function burn(address _from, uint256 _amount) onlyHasRole(BURNER_ROLE) override external {
+    function burn(address _from, uint256 _amount) external override onlyHasRole(BURNER_ROLE) {
         _burn(_from, _amount);
     }
 
-    function _transfer(address _from, address _to, uint256 _amount) internal override {
-        if(_to == address(this)) {
+    function _transfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal override {
+        if (_to == address(this)) {
             revert NoTransferToSelf();
         }
         super._transfer(_from, _to, _amount);
     }
-    
 }
