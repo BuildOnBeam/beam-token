@@ -15,7 +15,7 @@ contract Migrator {
     
     event Migrated(address indexed migrant, uint256 indexed destinationAmount);
 
-    constructor(address _source, address _destination, uint256 _migrationRate) {
+    constructor(IBeamToken _source, IBeamToken _destination, uint256 _migrationRate) {
         if(address(_source) == address(0)) {
             revert NoSourceZeroAddress();
         }
@@ -25,8 +25,8 @@ contract Migrator {
         if(_migrationRate == 0) {
             revert NoZeroRate();
         }
-        source = IBeamToken(_source);
-        destination = IBeamToken(_destination);
+        source = _source;
+        destination = _destination;
         migrationRate = _migrationRate;
     }
 

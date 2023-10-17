@@ -10,11 +10,11 @@ contract TokenBurner {
     error NoZeroAddressToken();
     event Burn(address indexed burner, uint256 amount);
 
-    constructor(address _token) {
-        if(_token == address(0)) {
+    constructor(IBeamToken _token) {
+        if(address(_token) == address(0)) {
             revert NoZeroAddressToken();
         }
-        token = IBeamToken(_token);
+        token = _token;
     }
 
     function burn() external {
