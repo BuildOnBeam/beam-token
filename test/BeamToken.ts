@@ -56,10 +56,6 @@ describe("BeamToken", function () {
       const hasRole = await beamToken.hasRole(DEFAULT_ADMIN_ROLE, deployer.address);
       expect(hasRole).to.eq(true);
     });
-    it("Should revert when minting with empty name or symbol", async () => {
-      await expect(new BeamToken__factory(deployer).deploy("", SYMBOL)).to.be.revertedWith("EmptyName()");
-      await expect(new BeamToken__factory(deployer).deploy(NAME, "")).to.be.revertedWith("EmptySymbol()");
-    });
   });
   describe("mint", async () => {
     it("Should work when calling from address which has MINTER_ROLE", async () => {

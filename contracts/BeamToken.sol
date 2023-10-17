@@ -6,13 +6,11 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 import "./interfaces/IBeamToken.sol";
 
-contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
+contract BeamToken is AccessControlEnumerable, ERC20Votes, IBeamToken {
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 private constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
     error NoRole();
-    error EmptyName();
-    error EmptySymbol();
     error NoSelfMinting();
     error NoTransferToSelf();
 
@@ -24,12 +22,6 @@ contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
     }
 
     constructor(string memory _name, string memory _symbol) ERC20Permit(_name) ERC20(_name, _symbol) {
-        if (bytes(_name).length == 0) {
-            revert EmptyName();
-        }
-        if (bytes(_symbol).length == 0) {
-            revert EmptySymbol();
-        }
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 

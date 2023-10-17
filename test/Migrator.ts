@@ -57,11 +57,6 @@ describe("Migrator", function () {
       expect(destination).to.eq(beamToken.address);
       expect(migrationRate).to.eq(MIGRATION_RATE);
     });
-    it("Should revert if setting migration rate to zero", async () => {
-      await expect(new Migrator__factory(deployer).deploy(meritToken.address, beamToken.address, 0)).to.revertedWith(
-        "NoZeroRate()",
-      );
-    });
   });
   describe("migrate", async () => {
     it("Should work when called by a token owner and Migrator has Minter and Burner role", async () => {

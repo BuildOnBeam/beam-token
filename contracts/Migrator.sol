@@ -9,8 +9,6 @@ contract Migrator {
     uint256 public immutable migrationRate;
     uint256 private constant DECIMAL_PRECISION = 1e18;
 
-    error NoZeroRate();
-
     event Migrated(address indexed migrant, uint256 indexed destinationAmount);
 
     constructor(
@@ -18,9 +16,6 @@ contract Migrator {
         IBeamToken _destination,
         uint256 _migrationRate
     ) {
-        if (_migrationRate == 0) {
-            revert NoZeroRate();
-        }
         source = _source;
         destination = _destination;
         migrationRate = _migrationRate;

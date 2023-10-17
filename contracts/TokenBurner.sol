@@ -6,7 +6,6 @@ import "./interfaces/IBeamToken.sol";
 contract TokenBurner {
     IBeamToken public immutable token;
 
-    error NoZeroAddressToken();
     event Burn(address indexed burner, uint256 amount);
 
     constructor(IBeamToken _token) {
