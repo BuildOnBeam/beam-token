@@ -6,7 +6,7 @@ import "solidity-coverage";
 import "./tasks/accounts";
 import "./tasks/clean";
 
-if(!process.env.COMPILE_ONLY) {
+if (!process.env.COMPILE_ONLY) {
   require("./tasks/deployers");
 }
 

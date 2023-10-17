@@ -4,14 +4,12 @@ pragma solidity 0.8.6;
 import "./interfaces/IBeamToken.sol";
 
 contract TokenBurner {
-
     IBeamToken public immutable token;
 
     event Burn(address indexed burner, uint256 amount);
 
-    constructor(address _token) {
-        require(_token != address(0), "Token cannot be zero address");
-        token = IBeamToken(_token);
+    constructor(IBeamToken _token) {
+        token = _token;
     }
 
     function burn() external {
@@ -19,5 +17,4 @@ contract TokenBurner {
         token.burn(address(this), burnAmount);
         emit Burn(msg.sender, burnAmount);
     }
-
 }
