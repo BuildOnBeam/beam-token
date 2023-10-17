@@ -57,13 +57,7 @@ describe("Migrator", function () {
       expect(destination).to.eq(beamToken.address);
       expect(migrationRate).to.eq(MIGRATION_RATE);
     });
-    it("Should revert if setting source, destination or migration rate to zero", async () => {
-      await expect(
-        new Migrator__factory(deployer).deploy(AddressZero, beamToken.address, MIGRATION_RATE),
-      ).to.revertedWith("NoSourceZeroAddress()");
-      await expect(
-        new Migrator__factory(deployer).deploy(meritToken.address, AddressZero, MIGRATION_RATE),
-      ).to.revertedWith("NoDestinationZeroAddress()");
+    it("Should revert if setting migration rate to zero", async () => {
       await expect(new Migrator__factory(deployer).deploy(meritToken.address, beamToken.address, 0)).to.revertedWith(
         "NoZeroRate()",
       );

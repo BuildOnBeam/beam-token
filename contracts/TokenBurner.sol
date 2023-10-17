@@ -10,9 +10,6 @@ contract TokenBurner {
     event Burn(address indexed burner, uint256 amount);
 
     constructor(IBeamToken _token) {
-        if (address(_token) == address(0)) {
-            revert NoZeroAddressToken();
-        }
         token = _token;
     }
 
