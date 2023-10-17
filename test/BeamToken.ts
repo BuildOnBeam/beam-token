@@ -4,6 +4,7 @@ import { BeamToken, BeamToken__factory } from "../typechain";
 import hre from "hardhat";
 import TimeTraveler from "../utils/TimeTraveler";
 import { parseEther } from "@ethersproject/units";
+import { keccak256 } from "ethers/lib/utils";
 
 
 const NAME = "NAME";
@@ -24,9 +25,11 @@ describe("BeamToken", function() {
     before(async() => {
         [deployer, minter, burner, ...accounts] = await hre.ethers.getSigners();
         beamToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL);
-
-        const MINTER_ROLE = await beamToken.MINTER_ROLE();
-        const BURNER_ROLE = await beamToken.BURNER_ROLE();
+        
+        // bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+        // bytes32 private constant BURNER_ROLE = keccak256("BURNER_ROLE");
+        const MINTER_ROLE = "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6";
+        const BURNER_ROLE = "0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848";
 
         await beamToken.grantRole(MINTER_ROLE, minter.address);
         await beamToken.grantRole(BURNER_ROLE, burner.address);

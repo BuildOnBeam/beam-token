@@ -31,8 +31,10 @@ describe("Migrator", function() {
         meritToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL);
         migrator = await (new Migrator__factory(deployer)).deploy(meritToken.address, beamToken.address, MIGRATION_RATE);
 
-        const MINTER_ROLE = await beamToken.MINTER_ROLE();
-        const BURNER_ROLE = await beamToken.BURNER_ROLE();
+        // bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+        // bytes32 private constant BURNER_ROLE = keccak256("BURNER_ROLE");
+        const MINTER_ROLE = "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6";
+        const BURNER_ROLE = "0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848";
 
         await meritToken.grantRole(MINTER_ROLE, deployer.address);
         await meritToken.mint(deployer.address, INITIAL_SUPPLY);
@@ -107,7 +109,7 @@ describe("Migrator", function() {
             const MINT_AMOUNT = parseEther("1500");
             await meritToken.connect(deployer).mint(migrant.address, MINT_AMOUNT);
 
-            const BURNER_ROLE = await meritToken.BURNER_ROLE();
+            const BURNER_ROLE = "0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848";
             await meritToken.revokeRole(BURNER_ROLE, migrator.address);
 
             await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT)).to.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
@@ -116,7 +118,7 @@ describe("Migrator", function() {
             const MINT_AMOUNT = parseEther("1500");
             await meritToken.connect(deployer).mint(migrant.address, MINT_AMOUNT);
 
-            const MINTER_ROLE = await beamToken.MINTER_ROLE();
+            const MINTER_ROLE = "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6";
             await beamToken.revokeRole(MINTER_ROLE, migrator.address);
 
             await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT)).to.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");

@@ -8,7 +8,7 @@ contract Migrator {
     IBeamToken public immutable source;
     IBeamToken public immutable destination;
     uint256 public immutable migrationRate;
-    uint256 public constant DECIMAL_PRECISION = 1e18;
+    uint256 private constant DECIMAL_PRECISION = 1e18;
 
     event Migrated(address indexed migrant, uint256 indexed destinationAmount);
 

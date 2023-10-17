@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "./interfaces/IBeamToken.sol";
 
 contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 private constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
     modifier onlyHasRole(bytes32 _role) {
         require(hasRole(_role, _msgSender()), "BeamToken.onlyHasRole: msg.sender does not have role");
