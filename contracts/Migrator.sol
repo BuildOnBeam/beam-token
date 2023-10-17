@@ -4,18 +4,27 @@ pragma solidity 0.8.6;
 import "./interfaces/IBeamToken.sol";
 
 contract Migrator {
-
     IBeamToken public immutable source;
     IBeamToken public immutable destination;
     uint256 public immutable migrationRate;
     uint256 private constant DECIMAL_PRECISION = 1e18;
 
+    error NoSourceZeroAddress();
+    error NoDestinationZeroAddress();
+    error NoZeroRate();
+    
     event Migrated(address indexed migrant, uint256 indexed destinationAmount);
 
     constructor(address _source, address _destination, uint256 _migrationRate) {
-        require(address(_source) != address(0), "Source cannot be zero address");
-        require(address(_destination) != address(0), "Destination cannot be zero address");
-        require(_migrationRate > 0, "Migration rate cannot be zero");
+        if(address(_source) == address(0)) {
+            revert NoSourceZeroAddress();
+        }
+        if(address(_destination) == address(0)) {
+            revert NoDestinationZeroAddress();
+        }
+        if(_migrationRate == 0) {
+            revert NoZeroRate();
+        }
         source = IBeamToken(_source);
         destination = IBeamToken(_destination);
         migrationRate = _migrationRate;

@@ -11,19 +11,33 @@ contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 private constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
+    error NoRole();
+    error EmptyName();
+    error EmptySymbol();
+    error NoSelfMinting();
+    error NoTransferToSelf();
+
     modifier onlyHasRole(bytes32 _role) {
-        require(hasRole(_role, _msgSender()), "BeamToken.onlyHasRole: msg.sender does not have role");
+        if(!hasRole(_role, _msgSender())) { 
+            revert NoRole();
+        }
         _;
     }
 
     constructor(string memory _name, string memory _symbol) ERC20Permit(_name) ERC20(_name, _symbol) {
-        require(bytes(_name).length > 0, "Empty name");
-        require(bytes(_symbol).length > 0, "Empty symbol");
+        if(bytes(_name).length == 0) { 
+            revert EmptyName();
+        }
+        if(bytes(_symbol).length == 0) { 
+            revert EmptySymbol();
+        }
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());  
     }
 
     function mint(address _to, uint256 _amount) onlyHasRole(MINTER_ROLE) override external {
-        require(_to != address(this), "BeamToken.mint: unable to mint tokens to itself");
+        if(_to ==address(this)) {
+            revert NoSelfMinting();
+        }
         _mint(_to, _amount);
     }
 
@@ -32,7 +46,9 @@ contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
     }
 
     function _transfer(address _from, address _to, uint256 _amount) internal override {
-        require(_to != address(this), "BeamToken._transfer: transfer to self not allowed");
+        if(_to == address(this)) {
+            revert NoTransferToSelf();
+        }
         super._transfer(_from, _to, _amount);
     }
     

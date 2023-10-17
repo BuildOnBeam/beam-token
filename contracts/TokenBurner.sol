@@ -7,10 +7,13 @@ contract TokenBurner {
 
     IBeamToken public immutable token;
 
+    error NoZeroAddressToken();
     event Burn(address indexed burner, uint256 amount);
 
     constructor(address _token) {
-        require(_token != address(0), "Token cannot be zero address");
+        if(_token == address(0)) {
+            revert NoZeroAddressToken();
+        }
         token = IBeamToken(_token);
     }
 

@@ -41,7 +41,7 @@ describe("BeamToken", function() {
         await timeTraveler.revertSnapshot();
     });
 
-    describe("contructor", async() => {
+    describe("constructor", async() => {
         it("Constructor args should be used", async() => {
             const name = await beamToken.name();
             const symbol = await beamToken.symbol();
@@ -59,8 +59,8 @@ describe("BeamToken", function() {
             expect(hasRole).to.eq(true);
         });
         it("Should revert when minting with empty name or symbol", async() => {
-            await expect((new BeamToken__factory(deployer)).deploy("", SYMBOL)).to.be.revertedWith("Empty name");
-            await expect((new BeamToken__factory(deployer)).deploy(NAME, "")).to.be.revertedWith("Empty symbol");
+            await expect((new BeamToken__factory(deployer)).deploy("", SYMBOL)).to.be.revertedWith("EmptyName()");
+            await expect((new BeamToken__factory(deployer)).deploy(NAME, "")).to.be.revertedWith("EmptySymbol()");
         });
     });
     describe("mint", async() => {
@@ -75,10 +75,10 @@ describe("BeamToken", function() {
             expect(accountBalance).to.eq(MINT_AMOUNT);
         });
         it("Should revert when called from address without MINTER_ROLE", async() => {
-            await expect(beamToken.mint(accounts[0].address, parseEther("1"))).to.be.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
+            await expect(beamToken.mint(accounts[0].address, parseEther("1"))).to.be.revertedWith("NoRole()");
         });
         it("Should revert when minting tokens to itself", async() => {
-            await expect(beamToken.connect(minter).mint(beamToken.address, parseEther("1"))).to.be.revertedWith("BeamToken.mint: unable to mint tokens to itself");
+            await expect(beamToken.connect(minter).mint(beamToken.address, parseEther("1"))).to.be.revertedWith("NoSelfMinting()");
         });
     });
     describe("burn", async() => {
@@ -96,13 +96,13 @@ describe("BeamToken", function() {
             expect(accountBalance).to.eq(INITIAL_SUPPLY.add(MINT_AMOUNT).sub(BURN_AMOUNT));
         });
         it("Should revert when called from address without BURNER_ROLE", async() => {
-            await expect(beamToken.burn(accounts[0].address, parseEther("1"))).to.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
+            await expect(beamToken.burn(accounts[0].address, parseEther("1"))).to.revertedWith("NoRole()");
         });
     });
 
     describe("transfer", async() => {
         it("transfer to token contract should fail", async() => {
-            await expect(beamToken.transfer(beamToken.address, parseEther("1"))).to.be.revertedWith("BeamToken._transfer: transfer to self not allowed");
+            await expect(beamToken.transfer(beamToken.address, parseEther("1"))).to.be.revertedWith("NoTransferToSelf()");
         });
         it("transfer should work normally", async() => {
             const MINT_AMOUNT = parseEther("10000");

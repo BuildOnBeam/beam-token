@@ -49,7 +49,7 @@ describe("Migrator", function() {
         await timeTraveler.revertSnapshot();
     });
 
-    describe("contructor", async() => {
+    describe("constructor", async() => {
         it("Constructor args should be used", async() => {
             const source = await migrator.source();
             const destination = await migrator.destination();
@@ -60,9 +60,9 @@ describe("Migrator", function() {
             expect(migrationRate).to.eq(MIGRATION_RATE);
         });
         it("Should revert if setting source, destination or migration rate to zero", async() => {
-            await expect((new Migrator__factory(deployer)).deploy(AddressZero, beamToken.address, MIGRATION_RATE)).to.revertedWith("Source cannot be zero address");
-            await expect((new Migrator__factory(deployer)).deploy(meritToken.address, AddressZero, MIGRATION_RATE)).to.revertedWith("Destination cannot be zero address");
-            await expect((new Migrator__factory(deployer)).deploy(meritToken.address, beamToken.address, 0)).to.revertedWith("Migration rate cannot be zero");
+            await expect((new Migrator__factory(deployer)).deploy(AddressZero, beamToken.address, MIGRATION_RATE)).to.revertedWith("NoSourceZeroAddress()");
+            await expect((new Migrator__factory(deployer)).deploy(meritToken.address, AddressZero, MIGRATION_RATE)).to.revertedWith("NoDestinationZeroAddress()");
+            await expect((new Migrator__factory(deployer)).deploy(meritToken.address, beamToken.address, 0)).to.revertedWith("NoZeroRate()");
         });
     });
     describe("migrate", async() => {
@@ -112,7 +112,7 @@ describe("Migrator", function() {
             const BURNER_ROLE = "0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848";
             await meritToken.revokeRole(BURNER_ROLE, migrator.address);
 
-            await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT)).to.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
+            await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT)).to.revertedWith("NoRole()");
         });
         it("Should revert when Migrator contract does not have minter role in destination token", async() => {
             const MINT_AMOUNT = parseEther("1500");
@@ -121,7 +121,7 @@ describe("Migrator", function() {
             const MINTER_ROLE = "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6";
             await beamToken.revokeRole(MINTER_ROLE, migrator.address);
 
-            await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT)).to.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
+            await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT)).to.revertedWith("NoRole()");
         });
     });
 });
