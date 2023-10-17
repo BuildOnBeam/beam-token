@@ -3,7 +3,6 @@ pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
 
 import "./interfaces/IBeamToken.sol";
 
@@ -18,7 +17,7 @@ contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
     error NoTransferToSelf();
 
     modifier onlyHasRole(bytes32 _role) {
-        if(!hasRole(_role, _msgSender())) { 
+        if(!hasRole(_role, msg.sender)) { 
             revert NoRole();
         }
         _;
@@ -31,7 +30,7 @@ contract BeamToken is Context, AccessControlEnumerable, ERC20Votes, IBeamToken {
         if(bytes(_symbol).length == 0) { 
             revert EmptySymbol();
         }
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());  
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);  
     }
 
     function mint(address _to, uint256 _amount) onlyHasRole(MINTER_ROLE) override external {
