@@ -63,6 +63,7 @@ task("deploy-beam-dao")
       0,
       [signers[0].address],
       [signers[0].address],
+      signers[0].address,
     );
     console.log(`deployed timelock at: ${timelock.address}`);
     if (taskArgs.verify) {
