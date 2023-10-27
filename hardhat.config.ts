@@ -2,6 +2,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
+import "@nomicfoundation/hardhat-verify";
 
 import "./tasks/accounts";
 import "./tasks/clean";
@@ -25,6 +26,8 @@ const chainIds = {
   mainnet: 1,
   rinkeby: 4,
   ropsten: 3,
+  sepolia: 11155111,
+  bsc: 56,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -65,11 +68,18 @@ const config: HardhatUserConfig = {
         mnemonic,
       },
       chainId: chainIds.hardhat,
+      forking: {
+        // eslint-disable-next-line
+        enabled: true,
+        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+      }
     },
     goerli: getChainConfig("goerli"),
     kovan: getChainConfig("kovan"),
     rinkeby: getChainConfig("rinkeby"),
     ropsten: getChainConfig("ropsten"),
+    sepolia: getChainConfig("sepolia"),
+    bsc: getChainConfig("bsc"),
   },
   paths: {
     artifacts: "./artifacts",
@@ -97,6 +107,13 @@ const config: HardhatUserConfig = {
     outDir: "typechain",
     target: "ethers-v5",
   },
+  etherscan: {
+    apiKey: {
+      sepolia: '',
+      goerli: '',
+      bsc: ''
+    }
+  }
 };
 
 export default config;

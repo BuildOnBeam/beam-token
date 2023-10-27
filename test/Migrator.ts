@@ -1,24 +1,30 @@
+
+
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { BeamToken, BeamToken__factory, Migrator, Migrator__factory } from "../typechain";
-import hre from "hardhat";
+import hre, { ethers } from "hardhat";
 import TimeTraveler from "../utils/TimeTraveler";
 import { parseEther } from "@ethersproject/units";
 import { AddressZero } from "@ethersproject/constants";
-
+import BEP20 from "../abi/BEP20.json";
 
 const NAME = "NAME";
 const SYMBOL = "SYMBOL";
-const INITIAL_SUPPLY = parseEther("10000");
+// const INITIAL_SUPPLY = parseEther("10000");
 const MIGRATION_RATE = parseEther("100");
 const MIGRATION_AMOUNT = parseEther("600");
+
+const BURN_ADDRESS = "0x000000000000000000000000000000000000dEaD"
+const MC_BSC = "0x949D48EcA67b17269629c7194F4b727d4Ef9E5d6"
+const BINANCE_HOLDER = "0x5a52E96BAcdaBb82fd05763E25335261B270Efcb"
 
 describe("Migrator", function() {
 
     this.timeout(200000);
 
     let beamToken: BeamToken;
-    let meritToken: BeamToken;
+    let meritToken: any;
     let migrator: Migrator;
     let deployer: SignerWithAddress;
     let migrant: SignerWithAddress;
@@ -28,16 +34,14 @@ describe("Migrator", function() {
     before(async() => {
         [deployer, migrant, ...accounts] = await hre.ethers.getSigners();
         beamToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL);
-        meritToken = await (new BeamToken__factory(deployer)).deploy(NAME, SYMBOL);
+        meritToken = new hre.ethers.Contract(MC_BSC, BEP20, hre.ethers.provider);
+        
+        const owner = await meritToken.getOwner();
+
         migrator = await (new Migrator__factory(deployer)).deploy(meritToken.address, beamToken.address, MIGRATION_RATE);
 
         const MINTER_ROLE = await beamToken.MINTER_ROLE();
-        const BURNER_ROLE = await beamToken.BURNER_ROLE();
 
-        await meritToken.grantRole(MINTER_ROLE, deployer.address);
-        await meritToken.mint(deployer.address, INITIAL_SUPPLY);
-
-        await meritToken.grantRole(BURNER_ROLE, migrator.address);
         await beamToken.grantRole(MINTER_ROLE, migrator.address);
 
         await timeTraveler.snapshot();
@@ -64,62 +68,110 @@ describe("Migrator", function() {
         });
     });
     describe("migrate", async() => {
-        it("Should work when called by a token owner and Migrator has Minter and Burner role", async() => {
-            const MINT_AMOUNT = parseEther("1500");
-            await meritToken.connect(deployer).mint(migrant.address, MINT_AMOUNT);
-
+        it("Should work when called by a token owner and Migrator has Minter and Burner role", async() => {            
             const meritTotalSupply = await meritToken.totalSupply();
             const beamTotalSupply = await beamToken.totalSupply();
+            
+            const meritBalance = await meritToken.balanceOf(BINANCE_HOLDER);
+            const beamBalance = await beamToken.balanceOf(BINANCE_HOLDER);
+            expect(meritBalance).to.not.eq(0);
+            expect(beamBalance).to.eq(0);
+            
+            const burnAddressBalance = await meritToken.balanceOf(BURN_ADDRESS);
+            expect(burnAddressBalance).to.eq(0);
 
-            const meritBalance = await meritToken.balanceOf(migrant.address);
-            const beamBalance = await beamToken.balanceOf(migrant.address);
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [BINANCE_HOLDER],
+            });
+            
+            const binanceHolderSigner = await hre.ethers.getSigner(BINANCE_HOLDER)
 
-            await migrator.connect(migrant).migrate(MIGRATION_AMOUNT);
+            const approveTx = await meritToken.connect(binanceHolderSigner).populateTransaction.approve(migrator.address ,MIGRATION_AMOUNT);
+            await binanceHolderSigner.sendTransaction(approveTx)
 
-            const meritBalanceFinal = await meritToken.balanceOf(migrant.address);
-            const beamBalanceFinal = await beamToken.balanceOf(migrant.address);
+            const migrateTx = await migrator.connect(binanceHolderSigner).populateTransaction.migrate(MIGRATION_AMOUNT);
+            await binanceHolderSigner.sendTransaction(migrateTx)
+
+            const meritBalanceFinal = await meritToken.balanceOf(BINANCE_HOLDER);
+            const beamBalanceFinal = await beamToken.balanceOf(BINANCE_HOLDER);
+
+            const burnAddressBalanceFinal = await meritToken.balanceOf(BURN_ADDRESS);
 
             const meritTotalSupplyFinal = await meritToken.totalSupply();
             const beamTotalSupplyFinal = await beamToken.totalSupply();
 
-            expect(meritTotalSupply).to.eq(meritTotalSupplyFinal.add(MIGRATION_AMOUNT));
+            // As we are not per se burning, total supply will not decrease
+            expect(meritTotalSupply).to.eq(meritTotalSupplyFinal);
             expect(beamTotalSupply).to.eq(beamTotalSupplyFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1"))));
             expect(meritBalance).to.eq(meritBalanceFinal.add(MIGRATION_AMOUNT));
             expect(beamBalance).to.eq(beamBalanceFinal.sub(MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1"))));
+            expect(burnAddressBalanceFinal).to.eq(MIGRATION_AMOUNT);            
         });
         it("Migrating should emit the correct event", async() => {
-            const MINT_AMOUNT = parseEther("1500");
-            await meritToken.connect(deployer).mint(migrant.address, MINT_AMOUNT);
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [BINANCE_HOLDER],
+            });
+            
+            const binanceHolderSigner = await hre.ethers.getSigner(BINANCE_HOLDER)
 
-            await migrator.connect(migrant).migrate(MIGRATION_AMOUNT);
+            const approveTx = await meritToken.connect(binanceHolderSigner).populateTransaction.approve(migrator.address ,MIGRATION_AMOUNT);
+            await binanceHolderSigner.sendTransaction(approveTx)
 
-            await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT))
+            const migrateTx = await migrator.connect(binanceHolderSigner).populateTransaction.migrate(MIGRATION_AMOUNT);
+
+            await expect(binanceHolderSigner.sendTransaction(migrateTx))
                 .to.emit(migrator, "Migrated")
-                .withArgs(migrant.address, MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1")));
+                .withArgs(binanceHolderSigner.address, MIGRATION_AMOUNT.mul(MIGRATION_RATE).div(parseEther("1")));
         });
         it("Should revert when called by a token owner without the amount", async() => {
-            const MINT_AMOUNT = parseEther("1500");
-            await meritToken.connect(deployer).mint(migrant.address, MINT_AMOUNT);
+            const balance = await meritToken.balanceOf(BINANCE_HOLDER);
 
-            await expect(migrator.connect(migrant).migrate(MINT_AMOUNT.add(parseEther("1")))).to.revertedWith("ERC20: burn amount exceeds balance");
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [BINANCE_HOLDER],
+            });
+            
+            const binanceHolderSigner = await hre.ethers.getSigner(BINANCE_HOLDER)
+
+            const approveTx = await meritToken.connect(binanceHolderSigner).populateTransaction.approve(migrator.address ,MIGRATION_AMOUNT);
+            await binanceHolderSigner.sendTransaction(approveTx)
+
+            const migrateTx = await migrator.connect(binanceHolderSigner).populateTransaction.migrate(MIGRATION_AMOUNT);
+            await binanceHolderSigner.sendTransaction(migrateTx)
+
+            await expect(migrator.connect(migrant).migrate(balance.add(parseEther("1")))).to.revertedWith("BEP20: transfer amount exceeds balance");
         });
-        it("Should revert when Migrator contract does not have burner role in source token", async() => {
-            const MINT_AMOUNT = parseEther("1500");
-            await meritToken.connect(deployer).mint(migrant.address, MINT_AMOUNT);
+        it("Should revert when called by a token owner without the approval", async() => {
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [BINANCE_HOLDER],
+            });
+            
+            const binanceHolderSigner = await hre.ethers.getSigner(BINANCE_HOLDER)
 
-            const BURNER_ROLE = await meritToken.BURNER_ROLE();
-            await meritToken.revokeRole(BURNER_ROLE, migrator.address);
+            const migrateTx = await migrator.connect(binanceHolderSigner).populateTransaction.migrate(MIGRATION_AMOUNT);
 
-            await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT)).to.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
+            await expect(binanceHolderSigner.sendTransaction(migrateTx)).to.revertedWith("BEP20: transfer amount exceeds allowance");
         });
         it("Should revert when Migrator contract does not have minter role in destination token", async() => {
-            const MINT_AMOUNT = parseEther("1500");
-            await meritToken.connect(deployer).mint(migrant.address, MINT_AMOUNT);
+            await hre.network.provider.request({
+                method: "hardhat_impersonateAccount",
+                params: [BINANCE_HOLDER],
+            });
+            
+            const binanceHolderSigner = await hre.ethers.getSigner(BINANCE_HOLDER)
+
+            const approveTx = await meritToken.connect(binanceHolderSigner).populateTransaction.approve(migrator.address ,MIGRATION_AMOUNT);
+            await binanceHolderSigner.sendTransaction(approveTx)
+
+            const migrateTx = await migrator.connect(binanceHolderSigner).populateTransaction.migrate(MIGRATION_AMOUNT);
 
             const MINTER_ROLE = await beamToken.MINTER_ROLE();
             await beamToken.revokeRole(MINTER_ROLE, migrator.address);
 
-            await expect(migrator.connect(migrant).migrate(MIGRATION_AMOUNT)).to.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
+            await expect(binanceHolderSigner.sendTransaction(migrateTx)).to.revertedWith("BeamToken.onlyHasRole: msg.sender does not have role");
         });
     });
 });
